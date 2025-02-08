@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Game Score Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+
+        input,
+        button {
+            margin: 5px;
+            padding: 10px;
+            width: 90%;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .player {
+            padding: 10px;
+            border: 1px solid #000;
+            margin: 5px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Card Game Score Tracker</h2>
+        <div id="auth-section">
+            <input type="text" id="username" placeholder="Enter your name">
+            <button id="registerBtn">Register</button>
+        </div>
+
+        <div id="game-section" class="hidden">
+            <h3>Players</h3>
+            <div id="players-list"></div>
+
+            <h3>Actions</h3>
+            <select id="winner-select"></select>
+            <button id="addWinnerBtn">🏆 Set Winner</button>
+
+            <input type="text" id="loser-id" placeholder="Enter loser ID">
+            <button id="lambungBtn">🔥 Lambung Player</button>
+        </div>
+    </div>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBUlMHc7tQvEJR2BSAlmDSWtQtD1VshohE",
+            authDomain: "mess-h-remi-cup.firebaseapp.com",
+            projectId: "mess-h-remi-cup",
+            storageBucket: "mess-h-remi-cup.appspot.com",
+            messagingSenderId: "852824878848",
+            appId: "1:852824878848:web:992f1ae041fdac9c4b8de5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+
+        document.getElementById("registerBtn").addEventListener("click", registerUser);
+        async function registerUser() {
+            const username = document.getElementById("username").value;
+            if (!username) return alert("Enter a name!");
+
+            const userId = "user_" + Math.random().toString(36).substr(2, 9);
+            await setDoc(doc(db, "users", userId), { name: username, points: 0, games_played: 0 });
+
+            currentUser = userId;
+            document.getElementById("auth-section").classList.add("hidden");
+            document.getElementById("game-section").classList.remove("hidden");
+
+            loadPlayers();
+        }
+
+        async function loadPlayers() {
+            const playersDiv = document.getElementById("players-list");
+            playersDiv.innerHTML = 'bisa';
+            const winnerSelect = document.getElementById("winner-select");
+            playersDiv.innerHTML = "";
+            winnerSelect.innerHTML = "";
+
+            const usersSnapshot = await getDocs(collection(db, "users"));
+            console.log('usersSnapshot', usersSnapshot)
+            usersSnapshot.forEach((doc) => {
+                const data = doc.data();
+                console.log('usersSnapshot', data)
+                playersDiv.innerHTML += `<div class="player"><strong>${data.name}</strong> - ${data.points} Points</div>`;
+                winnerSelect.innerHTML += `<option value="${doc.id}">${data.name}</option>`;
+            });
+        }
+
+        document.getElementById("addWinnerBtn").addEventListener("click", addWinnerPoints);
+        async function addWinnerPoints() {
+            const winnerId = document.getElementById("winner-select").value;
+            const userRef = doc(db, "users", winnerId);
+            const userSnap = await getDoc(userRef);
+
+            if (userSnap.exists()) {
+                const currentPoints = userSnap.data().points;
+                await updateDoc(userRef, {
+                    points: currentPoints + 250,
+                    games_played: (userSnap.data().games_played || 0) + 1
+                });
+            }
+            loadPlayers();
+        }
+
+        document.getElementById("lambungBtn").addEventListener("click", lambungPlayer);
+        async function lambungPlayer() {
+            const loserId = document.getElementById("loser-id").value;
+            if (!loserId) return alert("Enter loser ID!");
+
+            await updateDoc(doc(db, "users", loserId), { points: 0 });
+            alert("Player has been lambung!");
+            loadPlayers();
+        }
+
+        loadPlayers();
+    </script>
+</body>
+
+</html>
