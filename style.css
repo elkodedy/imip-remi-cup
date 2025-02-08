@@ -1,0 +1,31 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 20px;
+}
+
+.container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+input,
+button {
+    margin: 5px;
+    padding: 10px;
+    width: 90%;
+}
+
+.hidden {
+    /* display: none; */
+}
+
+.player {
+    padding: 10px;
+    border: 1px solid #000;
+    margin: 5px;
+    border-radius: 5px;
+}
